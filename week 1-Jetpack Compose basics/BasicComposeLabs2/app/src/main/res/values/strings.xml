@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">BasicComposeCodeLab</string>
+    <string name="show_less">Show less</string>
+    <string name="show_more">Show more</string>
+    <string name="contents">Composem ipsum color sit lazy, padding theme elit, sed do bouncy.</string>
+    <string name="hello">\"Hello, \"</string>
 </resources>
