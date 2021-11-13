@@ -3,9 +3,12 @@ package com.egiwon.layoutinjetpackcompose
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,8 +30,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.AlignmentLine
+import androidx.compose.ui.layout.FirstBaseline
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
@@ -42,7 +51,7 @@ class MainActivity : ComponentActivity() {
             LayoutInJetPackComposeTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-                    ImageList()
+                    LayoutsCodeLab()
                 }
             }
         }
@@ -142,11 +151,20 @@ fun LayoutsCodeLab() {
     }
 }
 
+val topics = listOf(
+    "Arts & Crafts", "Beauty", "Books", "Business", "Comics", "Culinary",
+    "Design", "Fashion", "Film", "History", "Maths", "Music", "People", "Philosophy",
+    "Religion", "Social sciences", "Technology", "TV", "Writing"
+)
+
 @Composable
 fun BodyContent(modifier: Modifier = Modifier) {
-    Column(modifier = modifier) {
-        Text(text = "Hi there!")
-        Text(text = "Thanks for going through the Layouts codelab")
+    Row(modifier = modifier.horizontalScroll(rememberScrollState())) {
+        StaggeredGrid(modifier = modifier, rows = 5) {
+            for (topic in topics) {
+                Chip(modifier = Modifier.padding(8.dp), text = topic)
+            }
+        }
     }
 }
 
@@ -183,18 +201,163 @@ fun PhotographerCard(modifier: Modifier = Modifier) {
 
 }
 
-@Preview
+fun Modifier.firstBaseLineToTop(
+    firstBaseLineToTop: Dp
+) = this.then(
+    layout { measurable, constraints ->
+        val placeable = measurable.measure(constraints)
+
+        // Check the composable has a first baseline
+        check(placeable[FirstBaseline] != AlignmentLine.Unspecified)
+        val firstBaseLine = placeable[FirstBaseline]
+
+        // Height of the composable with padding - first baseline
+        val placeableY = firstBaseLineToTop.roundToPx() - firstBaseLine
+        val height = placeable.height + placeableY
+        layout(placeable.width, height) {
+            // Where the composable gets placed
+            placeable.placeRelative(0, placeableY)
+        }
+    }
+)
+
 @Composable
-fun PhotographerCardPreview() {
-    LayoutInJetPackComposeTheme {
-        PhotographerCard()
+fun MyOwnColumn(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Layout(
+        modifier = modifier,
+        content = content
+    ) { measureable, constraints ->
+        val placeables = measureable.map { measurable ->
+            measurable.measure(constraints = constraints)
+        }
+
+        var yPosition = 0
+
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            placeables.forEach { placeable ->
+                placeable.placeRelative(x = 0, y = yPosition)
+
+                yPosition += placeable.height
+            }
+        }
+    }
+}
+
+@Composable
+fun StaggeredGrid(
+    modifier: Modifier = Modifier,
+    rows: Int = 3,
+    content: @Composable () -> Unit
+) {
+    Layout(
+        modifier = modifier,
+        content = content
+    ) { measurables, constraints ->
+
+        val rowWidths = IntArray(rows) { 0 }
+
+        val rowHeights = IntArray(rows) { 0 }
+
+        val placeables = measurables.mapIndexed { index, measurable ->
+            val placeable = measurable.measure(constraints)
+
+            val row = index % rows
+            rowWidths[row] += placeable.width
+            rowHeights[row] = rowHeights[row].coerceAtLeast(placeable.height)
+
+            placeable
+        }
+
+        val width = rowWidths.maxOrNull()
+            ?.coerceIn(constraints.minWidth.rangeTo(constraints.maxWidth)) ?: constraints.minWidth
+
+        val height = rowHeights.sumOf { it }
+            .coerceIn(constraints.minHeight.rangeTo(constraints.maxHeight))
+
+        val rowY = IntArray(rows) { 0 }
+        for (i in 1 until rows) {
+            rowY[i] = rowY[i - 1] + rowHeights[i - 1]
+        }
+
+        layout(width = width, height = height) {
+            val rowX = IntArray(rows) { 0 }
+
+            placeables.forEachIndexed { index, placeable ->
+                val row = index % rows
+                placeable.placeRelative(
+                    x = rowX[row],
+                    y = rowY[row]
+                )
+                rowX[row] += placeable.width
+            }
+        }
+
+
+    }
+}
+
+@Composable
+fun Chip(modifier: Modifier = Modifier, text: String) {
+    Card(
+        modifier = modifier,
+        border = BorderStroke(color = Color.Black, width = Dp.Hairline),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 8.dp, top = 4.dp, end = 8.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(16.dp, 16.dp)
+                    .background(color = MaterialTheme.colors.secondary)
+            )
+            Spacer(Modifier.width(4.dp))
+            Text(text = text)
+        }
+
     }
 }
 
 @Preview
 @Composable
+fun ChipPreview() {
+    LayoutInJetPackComposeTheme {
+        Chip(text = "Hi there")
+    }
+}
+
+@Preview
+@Composable
+fun TextWithPaddingToBaselinePreview() {
+    LayoutInJetPackComposeTheme {
+        Text("Hi there!", Modifier.firstBaseLineToTop(32.dp))
+    }
+}
+
+@Preview
+@Composable
+fun TextWithNormalPaddingPreview() {
+    LayoutInJetPackComposeTheme {
+        Text("Hi there!", Modifier.padding(top = 32.dp))
+    }
+}
+
+//@Preview
+//@Composable
+//fun PhotographerCardPreview() {
+//    LayoutInJetPackComposeTheme {
+//        PhotographerCard()
+//    }
+//}
+//
+@Preview
+@Composable
 fun LayoutsCodeLabPreview() {
     LayoutInJetPackComposeTheme {
-        LayoutsCodeLab()
+        BodyContent()
     }
 }
