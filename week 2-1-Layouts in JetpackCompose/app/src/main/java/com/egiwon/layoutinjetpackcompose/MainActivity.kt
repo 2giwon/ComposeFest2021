@@ -8,14 +8,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -66,9 +60,7 @@ class MainActivity : ComponentActivity() {
             LayoutInJetPackComposeTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-                    ConstraintLayoutContent()
-                    LargeConstraintLayout()
-                    DecoupledConstraintLayout()
+                    TwoTexts(text1 = "Hi", text2 = "there")
                 }
             }
         }
@@ -508,12 +500,47 @@ private fun decoupledConstraints(margin: Dp): ConstraintSet {
     }
 }
 
-@Preview
-@Composable
-fun ConstraintLayoutContentPreview() {
-    LayoutInJetPackComposeTheme {
+//@Preview
+//@Composable
+//fun ConstraintLayoutContentPreview() {
+//    LayoutInJetPackComposeTheme {
 //        ConstraintLayoutContent()
 //        LargeConstraintLayout()
-        DecoupledConstraintLayout()
+//        DecoupledConstraintLayout()
+//    }
+//}
+
+@Composable
+fun TwoTexts(modifier: Modifier = Modifier, text1: String, text2: String) {
+    Row(modifier = modifier.height(IntrinsicSize.Min)) {
+        Text(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 4.dp)
+                .wrapContentWidth(Alignment.Start),
+            text = text1
+        )
+
+        Divider(color = Color.Black, modifier = Modifier
+            .fillMaxHeight()
+            .width(1.dp))
+        Text(
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 4.dp)
+                .wrapContentWidth(Alignment.End),
+
+            text = text2
+        )
+    }
+}
+
+@Preview
+@Composable
+fun TwoTextsPreview() {
+    LayoutInJetPackComposeTheme {
+        Surface {
+            TwoTexts(text1 = "Hi", text2 = "there")
+        }
     }
 }
