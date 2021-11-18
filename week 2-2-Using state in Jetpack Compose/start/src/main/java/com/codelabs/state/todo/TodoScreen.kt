@@ -17,14 +17,7 @@
 package com.codelabs.state.todo
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Button
@@ -32,6 +25,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -149,22 +143,26 @@ fun TodoInputTextField(text: String, onTextChange: (String) -> Unit, modifier: M
 
 @Composable
 fun TodoItemEntryInput(onItemComplete: (TodoItem) -> Unit) {
-    val (text, setText) = remember { mutableStateOf("") }
-    val (icon, setIcon) = remember { mutableStateOf(TodoIcon.Default) }
-    val iconVisible = text.isNotBlank()
+    val (text, onTextChange) = remember { mutableStateOf("") }
+    val (icon, onIconChange) = remember { mutableStateOf(TodoIcon.Default) }
+//    val iconVisible = text.isNotBlank()
     val submit = {
-        onItemComplete(TodoItem(text, icon))
-        setIcon(TodoIcon.Default)
-        setText("")
+        if (text.isNotBlank()) {
+            onItemComplete(TodoItem(text, icon))
+            onTextChange("")
+            onIconChange(TodoIcon.Default)
+        }
     }
     TodoItemInput(
         text = text,
-        onTextChange = setText,
+        onTextChange = onTextChange,
         submit = submit,
-        iconVisible = iconVisible,
+        iconVisible = text.isNotBlank(),
         icon = icon,
-        onIconChange = setIcon
-    )
+        onIconChange = onIconChange
+    ) {
+        TodoEditButton(onClick = submit, text = "Add", enabled = text.isNotBlank())
+    }
 }
 
 @Composable
@@ -174,7 +172,8 @@ fun TodoItemInput(
     submit: () -> Unit,
     iconVisible: Boolean,
     icon: TodoIcon,
-    onIconChange: (TodoIcon) -> Unit
+    onIconChange: (TodoIcon) -> Unit,
+    buttonSlot: @Composable () -> Unit
 ) {
     Column {
         Row(
@@ -190,12 +189,15 @@ fun TodoItemInput(
                     .padding(end = 8.dp),
                 onImeAction = submit
             )
-            TodoEditButton(
-                onClick = submit,
-                text = "Add",
-                modifier = Modifier.align(Alignment.CenterVertically),
-                enabled = text.isNotBlank()
-            )
+//            TodoEditButton(
+//                onClick = submit,
+//                text = "Add",
+//                modifier = Modifier.align(Alignment.CenterVertically),
+//                enabled = text.isNotBlank()
+//            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+            Box(Modifier.align(Alignment.CenterVertically)) { buttonSlot() }
         }
         if (iconVisible) {
             AnimatedIconRow(
@@ -222,7 +224,25 @@ fun TodoItemInlineEditor(
     iconVisible = true,
     icon = item.icon,
     onIconChange = { onEditItemChange(item.copy(icon = it)) }
-)
+) {
+    Row {
+        val shrinkButtons = Modifier.widthIn(20.dp)
+        TextButton(onClick = onEditDone, modifier = shrinkButtons) {
+            Text(
+                text = "\uD83D\uDCBE",
+                textAlign = TextAlign.End,
+                modifier = Modifier.width(30.dp)
+            )
+        }
+        TextButton(onClick = onRemoveItem, modifier = shrinkButtons) {
+            Text(
+                text = "❌",
+                textAlign = TextAlign.End,
+                modifier = Modifier.width(30.dp)
+            )
+        }
+    }
+}
 
 private fun randomTint(): Float {
     return Random.nextFloat().coerceIn(0.3f, 0.9f)
