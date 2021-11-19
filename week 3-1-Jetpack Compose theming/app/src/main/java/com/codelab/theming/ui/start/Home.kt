@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -141,10 +142,12 @@ fun FeaturedPost(
             val padding = Modifier.padding(horizontal = 16.dp)
             Text(
                 text = post.title,
+                style = MaterialTheme.typography.h6,
                 modifier = padding
             )
             Text(
                 text = post.metadata.author.name,
+                style = MaterialTheme.typography.body2,
                 modifier = padding
             )
             PostMetadata(post, padding)
@@ -181,6 +184,7 @@ private fun PostMetadata(
     CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
         Text(
             text = text,
+            style = MaterialTheme.typography.subtitle2,
             modifier = modifier
         )
     }
@@ -199,6 +203,7 @@ fun PostItem(
         icon = {
             Image(
                 painter = painterResource(post.imageThumbId),
+                modifier = Modifier.clip(shape = MaterialTheme.shapes.small),
                 contentDescription = null
             )
         },
